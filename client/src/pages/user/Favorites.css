@@ -1,0 +1,229 @@
+.favorites-page {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  padding-bottom: 34px;
+}
+
+.favorites-hero,
+.favorites-message,
+.favorites-empty,
+.favorite-card {
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  background:
+    linear-gradient(145deg, rgba(15, 23, 42, 0.94), rgba(8, 17, 31, 0.96)),
+    #2c3e50;
+  box-shadow:
+    0 20px 54px rgba(0, 0, 0, 0.22),
+    inset 0 0 22px rgba(56, 189, 248, 0.04);
+}
+
+.favorites-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding: 24px;
+  border-radius: 18px;
+}
+
+.favorites-hero span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #38bdf8;
+  font-weight: 850;
+}
+
+.favorites-hero h1 {
+  margin-top: 8px;
+  color: #f8fafc;
+  font-size: clamp(34px, 4vw, 52px);
+  font-weight: 950;
+  line-height: 1;
+}
+
+.favorites-hero p {
+  max-width: 720px;
+  margin-top: 9px;
+  color: rgba(226, 232, 240, 0.68);
+}
+
+.favorites-hero > strong {
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(14, 165, 233, 0.14);
+  color: #67e8f9;
+}
+
+.favorites-message,
+.favorites-empty {
+  margin-bottom: 16px;
+  padding: 16px;
+  border-radius: 16px;
+  color: rgba(226, 232, 240, 0.82);
+}
+
+.favorites-empty {
+  display: grid;
+  min-height: 220px;
+  place-items: center;
+  text-align: center;
+}
+
+.favorites-empty svg {
+  color: #38bdf8;
+}
+
+.favorites-empty h2 {
+  color: #f8fafc;
+  font-size: 24px;
+}
+
+.favorites-empty p {
+  color: rgba(226, 232, 240, 0.64);
+}
+
+.favorites-empty a {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  margin-top: 8px;
+  padding: 0 16px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #0ea5e9, #2563eb);
+  color: #fff;
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.favorites-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.favorite-card {
+  overflow: hidden;
+  border-radius: 17px;
+}
+
+.favorite-image {
+  position: relative;
+  display: block;
+  aspect-ratio: 16 / 11;
+  overflow: hidden;
+  background: rgba(15, 23, 42, 0.86);
+}
+
+.favorite-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.favorite-card:hover .favorite-image img {
+  transform: scale(1.04);
+}
+
+.favorite-image span {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: rgba(8, 13, 30, 0.78);
+  color: #dbeafe;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.favorite-body {
+  padding: 14px;
+}
+
+.favorite-body small {
+  color: #38bdf8;
+  font-weight: 850;
+}
+
+.favorite-body h2 {
+  min-height: 46px;
+  margin-top: 6px;
+  color: #f8fafc;
+  font-size: 17px;
+  font-weight: 900;
+  line-height: 1.3;
+}
+
+.favorite-stars {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin: 8px 0;
+}
+
+.favorite-stars span {
+  margin-left: 4px;
+  color: rgba(226, 232, 240, 0.58);
+  font-size: 12px;
+}
+
+.favorite-body > strong {
+  display: block;
+  color: #22d3ee;
+  font-size: 17px;
+  font-weight: 950;
+}
+
+.favorite-actions {
+  display: grid;
+  grid-template-columns: 1fr 0.9fr;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.favorite-actions button {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 0;
+  border-radius: 11px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.favorite-actions button:first-child {
+  background: linear-gradient(135deg, #0ea5e9, #2563eb);
+}
+
+.favorite-actions button:last-child {
+  border: 1px solid rgba(248, 113, 113, 0.2);
+  background: rgba(239, 68, 68, 0.12);
+  color: #fecaca;
+}
+
+@media (max-width: 1080px) {
+  .favorites-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .favorites-hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .favorites-grid,
+  .favorite-actions {
+    grid-template-columns: 1fr;
+  }
+}

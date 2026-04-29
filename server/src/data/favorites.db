@@ -1,0 +1,4 @@
+{"userId":"DEJ9WMalRoHRdAGn","productIds":["mUP3cycgMrn3hHgW"],"_id":"RKsFY5doYbb7axx0","createdAt":{"$$date":1777191982097},"updatedAt":{"$$date":1777191982097}}
+{"userId":"gzUJlqTPm4ZdE55P","productIds":["TRkv9WlDS9xwRzo5","GTlC6sUj3jW7bb1B","DvV0C95CzQ6L0jOg"],"_id":"x46q3ff10cV6QoAk","createdAt":{"$$date":1777308807994},"updatedAt":{"$$date":1777308810575}}
+{"$$indexCreated":{"fieldName":"userId","unique":false,"sparse":false}}
+{"$$indexCreated":{"fieldName":"userId"}}

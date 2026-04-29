@@ -1,0 +1,10 @@
+[
+  {
+    "id": "f0a1619c-54d4-4e1c-b6c7-f57a587eea85",
+    "name": "Codex Check",
+    "email": "codex-check@example.com",
+    "password": "$2a$10$jwcuhMCBRJk7NCsMWwuL6O.piZind.1JeEC6WiUlWFCHj73cLjzEO",
+    "role": "seller",
+    "createdAt": "2026-04-18T12:01:36.537Z"
+  }
+]

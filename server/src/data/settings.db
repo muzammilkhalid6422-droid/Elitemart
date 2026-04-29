@@ -1,0 +1,3 @@
+{"key":"site","value":{"marketplaceName":"EliteMart","supportEmail":"support@elitemart.local","sellerApprovalRequired":true,"autoCompleteOrders":true,"lowStockAlert":5,"orderNotifications":true},"_id":"ZXkPCqPmK1MNNcBm","createdAt":{"$$date":1777200775477},"updatedAt":{"$$date":1777260427207}}
+{"$$indexCreated":{"fieldName":"key","unique":true,"sparse":false}}
+{"$$indexCreated":{"fieldName":"key","unique":true}}

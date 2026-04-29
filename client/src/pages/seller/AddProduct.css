@@ -1,0 +1,141 @@
+.page-bg {
+  background: radial-gradient(circle at top, #1e1b4b, #020617);
+}
+
+/* GLASS */
+.glass-container {
+  border-radius: 16px;
+  padding: 20px;
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(25px);
+  border: 1px solid rgba(255,255,255,0.15);
+}
+
+/* TEXT */
+.title {
+  font-size: 26px;
+  font-weight: 600;
+}
+
+.subtitle {
+  font-size: 13px;
+  opacity: 0.6;
+}
+
+.label {
+  font-size: 13px;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.hint {
+  font-size: 11px;
+  opacity: 0.5;
+}
+
+/* INPUT */
+.input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: white;
+
+  appearance: none;
+}
+
+/* TEXTAREA */
+.textarea {
+  height: 100px;
+  resize: none;
+}
+
+/* SELECT FIX */
+.select-wrapper {
+  position: relative;
+}
+
+.select-wrapper::after {
+  content: "▼";
+  position: absolute;
+  right: 12px;
+  top: 38px;
+  font-size: 10px;
+}
+
+/* BUTTONS */
+.btn-cancel {
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+.btn-save {
+  padding: 8px 16px;
+  border-radius: 10px;
+  background: linear-gradient(90deg,#4f46e5,#ec4899);
+}
+
+/* UPLOAD */
+.upload-panel {
+  height: 180px;
+  border: 1px dashed rgba(255,255,255,0.3);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+/* PREVIEW */
+.preview-grid {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.img-box {
+  position: relative;
+  width: 60px;
+  height: 60px;
+}
+
+.img-box img {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.img-box button {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: red;
+  border-radius: 50%;
+  padding: 2px;
+}
+
+/* MINI */
+.mini-box {
+  width: 60px;
+  height: 60px;
+  border: 1px dashed rgba(255,255,255,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+}
+
+/* FEATURE */
+.featured-box {
+  display: flex;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.05);
+}

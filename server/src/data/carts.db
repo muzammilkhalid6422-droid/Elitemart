@@ -1,0 +1,17 @@
+{"userId":"wYB2z5tR1TRPbfml","items":[],"_id":"2qlZV8nx9ehBtdHr","createdAt":{"$$date":1776679903717},"updatedAt":{"$$date":1776679956855}}
+{"userId":"51RtjpBtSz3OyWTK","items":[{"productId":"Arqtb6znE5vzdJEE","quantity":2}],"_id":"ImL4XA4pHyO9gRSt","createdAt":{"$$date":1776514541039},"updatedAt":{"$$date":1776514541039}}
+{"userId":"MuJ2FMIBMafriWtF","items":[{"productId":"Arqtb6znE5vzdJEE","quantity":2}],"_id":"Kx4ZECGyx9DXtOeQ","createdAt":{"$$date":1776601926424},"updatedAt":{"$$date":1776601996554}}
+{"userId":"gHD68BZLa8dXbLQv","items":[{"productId":"8jM09z0O66lVlAbb","quantity":1}],"_id":"QtACXLyLakVOJXrb","createdAt":{"$$date":1776604185483},"updatedAt":{"$$date":1776604513556}}
+{"userId":"nkt7OxEe2aBRvqIT","items":[],"_id":"SGE8Uh9paFLonUsz","createdAt":{"$$date":1776707656438},"updatedAt":{"$$date":1776707662123}}
+{"userId":"2t0ujh1iuM9Prm44","items":[{"productId":"MloU4p2xbbrVgv7t","quantity":1}],"_id":"SqJuWquA2TABkrae","createdAt":{"$$date":1777198604955},"updatedAt":{"$$date":1777198604955}}
+{"userId":"UL3CK1Vgx7aziZcW","items":[],"_id":"TQFao5h5YmjPqsTv","createdAt":{"$$date":1777289568360},"updatedAt":{"$$date":1777308191388}}
+{"userId":"7qYN2ArszdccLf3j","items":[],"_id":"V720CY9EW61jor8s","createdAt":{"$$date":1776680874161},"updatedAt":{"$$date":1776680887430}}
+{"userId":"xKjqLveWBXEP3lWS","items":[],"_id":"Vh8vpwj9g5jIOum5","createdAt":{"$$date":1776834717095},"updatedAt":{"$$date":1776834723898}}
+{"userId":"4vGXew1ee6RBc84Z","items":[],"_id":"YcO6moLTI7tUCXPT","createdAt":{"$$date":1776672429714},"updatedAt":{"$$date":1776672456142}}
+{"userId":"gzUJlqTPm4ZdE55P","items":[],"_id":"cIJSeJK5w4ySmN79","createdAt":{"$$date":1777308397797},"updatedAt":{"$$date":1777309195013}}
+{"userId":"jBNIlRGINQDqN2qP","items":[],"_id":"fipKgGDO1jYh9A5X","createdAt":{"$$date":1776786540112},"updatedAt":{"$$date":1776838571814}}
+{"userId":"MNFLNCsqHREQCYV5","items":[],"_id":"mUGLA2Pm5DUUUND0","createdAt":{"$$date":1776602664508},"updatedAt":{"$$date":1776603072812}}
+{"userId":"65e0wZrTt93DE0me","items":[],"_id":"nVdu14hfk9NCsUM4","createdAt":{"$$date":1776934539264},"updatedAt":{"$$date":1776943920690}}
+{"userId":"DEJ9WMalRoHRdAGn","items":[{"productId":"mUP3cycgMrn3hHgW","quantity":1},{"productId":"zP67qroW8JdngshQ","quantity":1},{"productId":"LszOtM5vSneCfxbe","quantity":1}],"_id":"vcBdhN1fwqJWKXBh","createdAt":{"$$date":1776954107349},"updatedAt":{"$$date":1777198655432}}
+{"$$indexCreated":{"fieldName":"userId","unique":true,"sparse":false}}
+{"$$indexCreated":{"fieldName":"userId","unique":true}}
