@@ -1,0 +1,5 @@
+{"email":"elitemart554526@gmail.com","role":"user","otpHash":"$2a$10$dS0w/bsAMLpk5CCgp1C2kupin3RVWlBMuDzn5SNfJ90/90AUkuDd.","expiresAt":"2026-05-15T20:51:49.112Z","_id":"GpKqvZno3lSkPu6E","createdAt":{"$$date":1778391577694},"updatedAt":{"$$date":1778877709459}}
+{"email":"muzammilkhalid1625@gmail.com","role":"user","otpHash":"$2a$10$UaEGLSp8OQFpNVMgvPv.IeEaeDe2w/.Xl/gsdrss/Was9D7pKRZQa","expiresAt":"2026-05-10T05:50:27.444Z","_id":"LrKYrje6zuGrfPqB","createdAt":{"$$date":1778391627444},"updatedAt":{"$$date":1778391627444}}
+{"$$indexCreated":{"fieldName":"email","unique":true,"sparse":false}}
+{"email":"elitemart554526@gmail.com","role":"user","otpHash":"$2a$10$UulISItJjrQV/cO5iOPe9OxjxUhP5I7AKhpxOjkGWvhz7E8ofU/qi","expiresAt":"2026-05-15T20:52:16.591Z","_id":"GpKqvZno3lSkPu6E","createdAt":{"$$date":1778391577694},"updatedAt":{"$$date":1778877736613}}
+{"$$deleted":true,"_id":"GpKqvZno3lSkPu6E"}
