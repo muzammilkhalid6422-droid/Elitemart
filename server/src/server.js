@@ -44,6 +44,12 @@ app.get("/api/health", (_req, res) => {
     status: "ok",
   });
 });
+app.get('/', (req, res) => {
+    res.send({
+        activeStatus: true,
+        error: false,
+    })
+});
 
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
