@@ -7,6 +7,7 @@ import {
   BarChart3,
   ArrowUp,
 } from "lucide-react";
+import api from "../../services/api";
 import "./AdminDashboard.css";
 
 const AdminDashboard = () => {
@@ -25,23 +26,14 @@ const AdminDashboard = () => {
 
   const fetchStats = async () => {
     try {
-      const adminToken = localStorage.getItem("adminToken");
-
-      // Fetch from multiple endpoints
-      const usersRes = await fetch("http://localhost:5000/api/admin/users", {
-        headers: { Authorization: `Bearer ${adminToken}` },
-      });
-
-      const sellersRes = await fetch("http://localhost:5000/api/admin/sellers", {
-        headers: { Authorization: `Bearer ${adminToken}` },
-      });
-
-      const usersData = await usersRes.json();
-      const sellersData = await sellersRes.json();
+      const [usersRes, sellersRes] = await Promise.all([
+        api.get("/admin/users"),
+        api.get("/admin/sellers"),
+      ]);
 
       // Calculate stats
-      const totalUsers = usersData.users?.length || 0;
-      const totalSellers = sellersData.sellers?.length || 0;
+      const totalUsers = usersRes.data.users?.length || 0;
+      const totalSellers = sellersRes.data.sellers?.length || 0;
 
       setStats({
         totalUsers,

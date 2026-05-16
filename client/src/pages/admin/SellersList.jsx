@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Eye, Check, X, Search } from "lucide-react";
+import api from "../../services/api";
 import "./SellersList.css";
 
 const SellersList = () => {
@@ -16,21 +17,11 @@ const SellersList = () => {
 
   const fetchSellers = async () => {
     try {
-      const adminToken = localStorage.getItem("adminToken");
-      const response = await fetch("http://localhost:5000/api/admin/sellers/history", {
-        method: "GET",
-        headers: { Authorization: `Bearer ${adminToken}` },
-      });
-
-      const data = await response.json();
-      if (response.ok) {
-        setSellers(data.sellers || []);
-      } else {
-        setMessage(data.message || "Failed to fetch sellers");
-      }
+      const response = await api.get("/admin/sellers/history");
+      setSellers(response.data.sellers || []);
     } catch (error) {
       console.error("Error:", error);
-      setMessage("Unable to fetch sellers");
+      setMessage(error.response?.data?.message || "Unable to fetch sellers");
     } finally {
       setLoading(false);
     }
@@ -38,44 +29,32 @@ const SellersList = () => {
 
   const handleApproveSeller = async (id) => {
     try {
-      const adminToken = localStorage.getItem("adminToken");
-      const response = await fetch(`http://localhost:5000/api/admin/sellers/${id}/approve`, {
-        method: "PUT",
-        headers: { Authorization: `Bearer ${adminToken}` },
-      });
-
-      if (response.ok) {
-        setMessage("Seller approved successfully!");
-        setSellers((current) =>
-          current.map((seller) =>
-            seller._id === id ? { ...seller, isApproved: true } : seller
-          )
-        );
-        setSelectedSeller((current) =>
-          current?._id === id ? { ...current, isApproved: true } : current
-        );
-      }
+      await api.put(`/admin/sellers/${id}/approve`);
+      setMessage("Seller approved successfully!");
+      setSellers((current) =>
+        current.map((seller) =>
+          seller._id === id ? { ...seller, isApproved: true } : seller
+        )
+      );
+      setSelectedSeller((current) =>
+        current?._id === id ? { ...current, isApproved: true } : current
+      );
     } catch (error) {
       console.error("Error:", error);
+      setMessage(error.response?.data?.message || "Unable to approve seller");
     }
   };
 
   const handleRejectSeller = async (id) => {
     if (window.confirm("Are you sure you want to reject this seller?")) {
       try {
-        const adminToken = localStorage.getItem("adminToken");
-        const response = await fetch(`http://localhost:5000/api/admin/sellers/${id}/reject`, {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${adminToken}` },
-        });
-
-        if (response.ok) {
-          setMessage("Seller rejected successfully!");
-          setSellers(sellers.filter((s) => s._id !== id));
-          setSelectedSeller(null);
-        }
+        await api.delete(`/admin/sellers/${id}/reject`);
+        setMessage("Seller rejected successfully!");
+        setSellers(sellers.filter((s) => s._id !== id));
+        setSelectedSeller(null);
       } catch (error) {
         console.error("Error:", error);
+        setMessage(error.response?.data?.message || "Unable to reject seller");
       }
     }
   };

@@ -10,6 +10,10 @@ export const registerSeller = (data) => {
   return api.post("/auth/register/seller", data);
 };
 
+export const requestRegistrationOtp = (data) => {
+  return api.post("/auth/register/request-otp", data);
+};
+
 // LOGIN USER/SELLER
 export const loginUser = (data) => {
   return api.post("/auth/login", data);

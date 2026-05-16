@@ -20,7 +20,7 @@ import {
   Zap,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { registerSeller, registerUser } from "../../services/authService";
+import { registerSeller, registerUser, requestRegistrationOtp } from "../../services/authService";
 import { splitBrandName, useBranding } from "../../context/BrandingContext";
 import { saveAuthSession } from "../../utils/authSession";
 import "./Register.css";
@@ -42,6 +42,14 @@ const emptySeller = {
   cnicBack: "",
 };
 
+const normalizeEmail = (email) =>
+  String(email || "")
+    .normalize("NFKC")
+    .replace(/[\u200B-\u200D\uFEFF]/g, "")
+    .replace(/\s+/g, "")
+    .trim()
+    .toLowerCase();
+
 const Register = () => {
   const navigate = useNavigate();
   const { branding } = useBranding();
@@ -49,6 +57,7 @@ const Register = () => {
   const [step, setStep] = useState("role");
   const [accountData, setAccountData] = useState(emptyAccount);
   const [sellerData, setSellerData] = useState(emptySeller);
+  const [registrationOtp, setRegistrationOtp] = useState("");
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("error");
   const [loading, setLoading] = useState(false);
@@ -61,7 +70,10 @@ const Register = () => {
 
   const handleAccountChange = (event) => {
     const { name, value } = event.target;
-    setAccountData((prev) => ({ ...prev, [name]: value }));
+    setAccountData((prev) => ({
+      ...prev,
+      [name]: name === "email" ? normalizeEmail(value) : value,
+    }));
   };
 
   const handleSellerChange = (event) => {
@@ -84,9 +96,14 @@ const Register = () => {
     reader.readAsDataURL(file);
   };
 
+  const handleOtpChange = (event) => {
+    setRegistrationOtp(event.target.value.replace(/\D/g, "").slice(0, 6));
+  };
+
   const resetForStep = (nextStep) => {
     setMessage("");
     setMessageType("error");
+    setRegistrationOtp("");
     setStep(nextStep);
   };
 
@@ -95,7 +112,14 @@ const Register = () => {
     return required.every((field) => String(accountData[field] || "").trim());
   };
 
-  const handleUserRegister = async (event) => {
+  const validateSellerFields = () =>
+    validateCommonFields() &&
+    sellerData.companyName &&
+    sellerData.paymentAccountNumber &&
+    sellerData.cnicFront &&
+    sellerData.cnicBack;
+
+  const handleRequestRegistrationOtp = async (event, role) => {
     event.preventDefault();
     setMessage("");
 
@@ -103,10 +127,45 @@ const Register = () => {
       return setNotice("Please complete name, email, phone, password, country and region.");
     }
 
+    if (role === "seller" && !validateSellerFields()) {
+      return setNotice("Please complete seller details, payment account number and upload both CNIC images.");
+    }
+
     setLoading(true);
 
     try {
-      const response = await registerUser(accountData);
+      const response = await requestRegistrationOtp({
+        name: accountData.name,
+        email: normalizeEmail(accountData.email),
+        role,
+      });
+
+      setRegistrationOtp("");
+      setStep(role === "seller" ? "sellerOtp" : "userOtp");
+      setNotice(response.data.message || "OTP has been sent to your email.", "success");
+    } catch (error) {
+      setNotice(error.response?.data?.message || "Unable to send registration OTP.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUserRegister = async (event) => {
+    event.preventDefault();
+    setMessage("");
+
+    if (!registrationOtp.trim()) {
+      return setNotice("Please enter the OTP sent to your email.");
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await registerUser({
+        ...accountData,
+        email: normalizeEmail(accountData.email),
+        registrationOtp,
+      });
 
       saveAuthSession(response.data.user, response.data.token);
       setNotice(response.data.message || "Registration successful.", "success");
@@ -122,14 +181,8 @@ const Register = () => {
     event.preventDefault();
     setMessage("");
 
-    if (
-      !validateCommonFields() ||
-      !sellerData.companyName ||
-      !sellerData.paymentAccountNumber ||
-      !sellerData.cnicFront ||
-      !sellerData.cnicBack
-    ) {
-      return setNotice("Please complete seller details, payment account number and upload both CNIC images.");
+    if (!registrationOtp.trim()) {
+      return setNotice("Please enter the OTP sent to your email.");
     }
 
     setLoading(true);
@@ -137,11 +190,14 @@ const Register = () => {
     try {
       const response = await registerSeller({
         ...accountData,
+        email: normalizeEmail(accountData.email),
         ...sellerData,
+        registrationOtp,
       });
 
       setAccountData(emptyAccount);
       setSellerData(emptySeller);
+      setRegistrationOtp("");
       setNotice(
         response.data.message || "Seller account submitted. You can login after admin approval.",
         "success"
@@ -294,6 +350,37 @@ const Register = () => {
     </>
   );
 
+  const renderOtpFields = (role) => (
+    <>
+      <div className="approval-note">
+        <ShieldCheck size={18} />
+        Enter the 6 digit OTP sent to {accountData.email}.
+      </div>
+
+      <label className="register-input-group">
+        <span>Email OTP</span>
+        <Mail size={18} />
+        <input
+          type="text"
+          inputMode="numeric"
+          name="registrationOtp"
+          placeholder="Enter OTP"
+          value={registrationOtp}
+          onChange={handleOtpChange}
+        />
+      </label>
+
+      <button
+        type="button"
+        className="register-link-btn"
+        onClick={(event) => handleRequestRegistrationOtp(event, role)}
+        disabled={loading}
+      >
+        Resend OTP
+      </button>
+    </>
+  );
+
   if (step === "role") {
     return (
       <main className="register-page">
@@ -327,7 +414,9 @@ const Register = () => {
     );
   }
 
-  const isSeller = step === "seller";
+  const isSeller = step === "seller" || step === "sellerOtp";
+  const isOtpStep = step === "userOtp" || step === "sellerOtp";
+  const currentRole = isSeller ? "seller" : "user";
 
   return (
     <main className="register-page">
@@ -338,24 +427,33 @@ const Register = () => {
         )}
 
         <section className="register-form-panel">
-          <button type="button" className="back-btn" onClick={() => resetForStep("role")}>
+          <button type="button" className="back-btn" onClick={() => resetForStep(isOtpStep ? currentRole : "role")}>
             <ArrowLeft size={17} />
             Back
           </button>
 
           <p className="register-kicker">{isSeller ? "Seller account" : "Customer account"}</p>
           <h2 className="register-title">
-            Create Your <span>{isSeller ? "Seller" : "Customer"}</span> Account
+            {isOtpStep ? "Verify Your" : "Create Your"} <span>{isSeller ? "Seller" : "Customer"}</span> Account
           </h2>
           <p className="register-subtitle">
-            Fill in the details below to get started.
+            {isOtpStep ? "Verify email ownership before account creation." : "Fill in the details below to get started."}
           </p>
           {renderMessage()}
 
-          <form onSubmit={isSeller ? handleSellerRegister : handleUserRegister} className="register-form">
-            {renderCommonFields()}
+          <form
+            onSubmit={
+              isOtpStep
+                ? isSeller
+                  ? handleSellerRegister
+                  : handleUserRegister
+                : (event) => handleRequestRegistrationOtp(event, currentRole)
+            }
+            className="register-form"
+          >
+            {isOtpStep ? renderOtpFields(currentRole) : renderCommonFields()}
 
-            {isSeller && (
+            {isSeller && !isOtpStep && (
               <>
                 <label className="register-input-group">
                   <span>Store Name</span>
@@ -394,7 +492,13 @@ const Register = () => {
             )}
 
             <button type="submit" className="register-btn" disabled={loading}>
-              {loading ? "Submitting..." : isSeller ? "Submit for Approval" : "Create Account"}
+              {loading
+                ? "Submitting..."
+                : isOtpStep
+                  ? isSeller
+                    ? "Verify & Submit for Approval"
+                    : "Verify & Create Account"
+                  : "Send Email OTP"}
             </button>
           </form>
         </section>

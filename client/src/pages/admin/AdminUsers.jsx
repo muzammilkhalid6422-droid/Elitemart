@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Search, Mail } from "lucide-react";
+import api from "../../services/api";
 import "./AdminPages.css";
 
 const AdminUsers = () => {
@@ -13,15 +14,8 @@ const AdminUsers = () => {
 
   const fetchUsers = async () => {
     try {
-      const adminToken = localStorage.getItem("adminToken");
-      const response = await fetch("http://localhost:5000/api/admin/users", {
-        headers: { Authorization: `Bearer ${adminToken}` },
-      });
-
-      const data = await response.json();
-      if (response.ok) {
-        setUsers(data.users || []);
-      }
+      const response = await api.get("/admin/users");
+      setUsers(response.data.users || []);
     } catch (error) {
       console.error("Error:", error);
     } finally {
