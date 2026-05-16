@@ -2,6 +2,8 @@ const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
 
+dotenv.config();
+
 const authRoutes = require("./routes/authRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const productRoutes = require("./routes/productRoutes");
@@ -11,7 +13,6 @@ const userRoutes = require("./routes/userRoutes");
 const sellerRoutes = require("./routes/sellerRoutes");
 const trafficRoutes = require("./routes/trafficRoutes");
 const settingsRoutes = require("./routes/settingsRoutes");
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -44,12 +45,6 @@ app.get("/api/health", (_req, res) => {
     status: "ok",
   });
 });
-app.get('/', (req, res) => {
-    res.send({
-        activeStatus: true,
-        error: false,
-    })
-});
 
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
@@ -75,6 +70,10 @@ app.use((err, _req, res, _next) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+if (process.env.NODE_ENV !== "production") {
+  app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
+}
+
+module.exports = app;
