@@ -16,7 +16,7 @@ const settingsRoutes = require("./routes/settingsRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const CLIENT_URLS = (process.env.CLIENT_URL || "http://localhost:5173,http://localhost:5174,https://ellitemart.netlify.app")
+const CLIENT_URLS = (process.env.CLIENT_URL || "http://localhost:5173,http://localhost:5174")
   .split(",")
   .map((url) => url.trim())
   .filter(Boolean);
