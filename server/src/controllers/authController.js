@@ -2,12 +2,122 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const https = require("https");
 
-const { usersStore, sellersStore } = require("../db/datastores");
+const { usersStore, sellersStore, registrationOtpsStore } = require("../db/datastores");
 const { isPlanExpired, normalizeSellerPlan, formatPlanInfo, getPlanStatus } = require("../utils/planUtils");
+const { sendLoginEmail, sendRegistrationOtpEmail } = require("../utils/emailService");
 
 const allowedRoles = new Set(["user", "seller", "admin"]);
 const MAX_AVATAR_SIZE_BYTES = 3 * 1024 * 1024;
 const MAX_DOCUMENT_SIZE_BYTES = 5 * 1024 * 1024;
+const REGISTRATION_OTP_MINUTES = 10;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+const normalizeEmail = (email) =>
+  String(email || "")
+    .normalize("NFKC")
+    .replace(/[\u200B-\u200D\uFEFF]/g, "")
+    .replace(/\s+/g, "")
+    .trim()
+    .toLowerCase();
+
+const isValidEmail = (email) => EMAIL_PATTERN.test(normalizeEmail(email));
+
+const generateOtp = () => String(Math.floor(100000 + Math.random() * 900000));
+
+const findExistingAccountByEmail = async (email) => {
+  const normalizedEmail = normalizeEmail(email);
+  const existingUser = await usersStore.findOne({ email: normalizedEmail });
+  const existingSeller = await sellersStore.findOne({ email: normalizedEmail });
+  return existingUser || existingSeller;
+};
+
+const verifyRegistrationOtpForEmail = async (email, otp) => {
+  const normalizedEmail = normalizeEmail(email);
+  const normalizedOtp = String(otp || "").trim();
+  const registrationOtp = await registrationOtpsStore.findOne({ email: normalizedEmail });
+
+  if (
+    !registrationOtp ||
+    !normalizedOtp ||
+    !registrationOtp.otpHash ||
+    !registrationOtp.expiresAt ||
+    new Date(registrationOtp.expiresAt).getTime() < Date.now()
+  ) {
+    return false;
+  }
+
+  return bcrypt.compare(normalizedOtp, registrationOtp.otpHash);
+};
+
+const requestRegistrationOtp = async (req, res) => {
+  try {
+    const { name = "", email = "", role = "user" } = req.body;
+    const normalizedEmail = normalizeEmail(email);
+    const normalizedRole = String(role || "user").trim().toLowerCase();
+
+    if (!isValidEmail(normalizedEmail)) {
+      return res.status(400).json({
+        message: "Email is not valid",
+      });
+    }
+
+    if (!["user", "seller"].includes(normalizedRole)) {
+      return res.status(400).json({
+        message: "Invalid account type",
+      });
+    }
+
+    const existingAccount = await findExistingAccountByEmail(normalizedEmail);
+
+    if (existingAccount) {
+      return res.status(409).json({
+        message: "Email already registered",
+      });
+    }
+
+    const otp = generateOtp();
+    const otpHash = await bcrypt.hash(otp, 10);
+    const expiresAt = new Date(
+      Date.now() + REGISTRATION_OTP_MINUTES * 60 * 1000
+    ).toISOString();
+
+    await registrationOtpsStore.update(
+      { email: normalizedEmail },
+      {
+        $set: {
+          email: normalizedEmail,
+          role: normalizedRole,
+          otpHash,
+          expiresAt,
+        },
+      },
+      { upsert: true }
+    );
+
+    const sent = await sendRegistrationOtpEmail(
+      {
+        email: normalizedEmail,
+        name: String(name || "").trim(),
+      },
+      otp
+    );
+
+    if (!sent) {
+      return res.status(500).json({
+        message: "Email service is not configured. Please check SMTP settings.",
+      });
+    }
+
+    return res.json({
+      message: "OTP has been sent to your email",
+    });
+  } catch (error) {
+    console.error("Registration OTP error:", error);
+    return res.status(502).json({
+      message: "Could not send OTP email. Please check SMTP settings and try again.",
+    });
+  }
+};
 
 const fetchJson = (url, options = {}) =>
   new Promise((resolve, reject) => {
@@ -111,7 +221,24 @@ const registerUser = async (req, res) => {
       });
     }
 
-    const normalizedEmail = String(email).trim().toLowerCase();
+    const normalizedEmail = normalizeEmail(email);
+
+    if (!isValidEmail(normalizedEmail)) {
+      return res.status(400).json({
+        message: "Email is not valid",
+      });
+    }
+
+    const isRegistrationOtpValid = await verifyRegistrationOtpForEmail(
+      normalizedEmail,
+      req.body.registrationOtp
+    );
+
+    if (!isRegistrationOtpValid) {
+      return res.status(400).json({
+        message: "Please verify your email with a valid OTP first",
+      });
+    }
 
     // Check in both stores to avoid duplicates
     const existingUser = await usersStore.findOne({ email: normalizedEmail });
@@ -144,6 +271,8 @@ const registerUser = async (req, res) => {
       avatar: normalizedAvatar,
       password: hashedPassword,
     });
+
+    await registrationOtpsStore.remove({ email: normalizedEmail }, {});
 
     return res.status(201).json({
       message: "Registration successful",
@@ -186,7 +315,24 @@ const registerSeller = async (req, res) => {
       });
     }
 
-    const normalizedEmail = String(email).trim().toLowerCase();
+    const normalizedEmail = normalizeEmail(email);
+
+    if (!isValidEmail(normalizedEmail)) {
+      return res.status(400).json({
+        message: "Email is not valid",
+      });
+    }
+
+    const isRegistrationOtpValid = await verifyRegistrationOtpForEmail(
+      normalizedEmail,
+      req.body.registrationOtp
+    );
+
+    if (!isRegistrationOtpValid) {
+      return res.status(400).json({
+        message: "Please verify your email with a valid OTP first",
+      });
+    }
 
     // Check in both stores to avoid duplicates
     const existingUser = await usersStore.findOne({ email: normalizedEmail });
@@ -255,6 +401,8 @@ const registerSeller = async (req, res) => {
       planExpiry: null,
     });
 
+    await registrationOtpsStore.remove({ email: normalizedEmail }, {});
+
     return res.status(201).json({
       message: "Seller registration successful. Pending admin approval.",
       user: sanitizeUser(seller, "seller"),
@@ -288,6 +436,8 @@ const loginUser = async (req, res) => {
           message: "Invalid email or password",
         });
       }
+
+      sendLoginEmail(user, "user");
 
       return res.json({
         message: "Login successful",
@@ -342,6 +492,8 @@ const loginUser = async (req, res) => {
           message: "Invalid email or password",
         });
       }
+
+      sendLoginEmail(seller, "seller");
 
       return res.json({
         message: "Login successful",
@@ -584,6 +736,7 @@ const updateProfile = async (req, res) => {
 module.exports = {
   registerUser,
   registerSeller,
+  requestRegistrationOtp,
   loginUser,
   loginWithGoogle,
   getProfile,

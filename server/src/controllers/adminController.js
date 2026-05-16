@@ -16,6 +16,7 @@ const {
   normalizeSellerPlan,
 } = require("../utils/planUtils");
 const { buildTrafficSummary } = require("./trafficController");
+const { sendSellerApprovedEmail } = require("../utils/emailService");
 
 const sanitizeSeller = (seller) => {
   const { password, ...safeSeller } = seller;
@@ -238,6 +239,7 @@ const approveSeller = async (req, res) => {
     );
 
     const updatedSeller = await sellersStore.findOne({ _id: id });
+    sendSellerApprovedEmail(updatedSeller);
 
     return res.json({
       message: "Seller approved successfully",

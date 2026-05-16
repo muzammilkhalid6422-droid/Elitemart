@@ -16,9 +16,10 @@ const settingsRoutes = require("./routes/settingsRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const CLIENT_URLS = process.env.CLIENT_URL
-  ? [process.env.CLIENT_URL]
-  : ["http://localhost:5173", "http://localhost:5174"];
+const CLIENT_URLS = (process.env.CLIENT_URL || "http://localhost:5173,http://localhost:5174" , "https://ellitemart.netlify.app/login")
+  .split(",")
+  .map((url) => url.trim())
+  .filter(Boolean);
 const REQUEST_LIMIT = process.env.REQUEST_LIMIT || "50mb";
 app.use(
   cors({

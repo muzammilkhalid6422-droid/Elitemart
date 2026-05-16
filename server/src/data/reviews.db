@@ -1,3 +1,5 @@
 {"productId":"bxLkzp6mJ6VEXne1","userId":"DEJ9WMalRoHRdAGn","userName":"Ahyyty","rating":3,"comment":"good product","_id":"X6B9dmLPwMkJ6sJh","createdAt":{"$$date":1777188243314},"updatedAt":{"$$date":1777188243314}}
 {"$$indexCreated":{"fieldName":"productId","unique":false,"sparse":false}}
 {"$$indexCreated":{"fieldName":"userId","unique":false,"sparse":false}}
+{"$$indexCreated":{"fieldName":"productId"}}
+{"$$indexCreated":{"fieldName":"userId"}}

@@ -26,6 +26,7 @@ const reviewsStore = createStore("reviews.db");
 const favoritesStore = createStore("favorites.db");
 const trafficStore = createStore("traffic.db");
 const settingsStore = createStore("settings.db");
+const registrationOtpsStore = createStore("registrationOtps.db");
 
 usersStore.ensureIndex({ fieldName: "email", unique: true });
 sellersStore.ensureIndex({ fieldName: "email", unique: true });
@@ -42,6 +43,7 @@ trafficStore.ensureIndex({ fieldName: "visitorId" });
 trafficStore.ensureIndex({ fieldName: "path" });
 trafficStore.ensureIndex({ fieldName: "createdAt" });
 settingsStore.ensureIndex({ fieldName: "key", unique: true });
+registrationOtpsStore.ensureIndex({ fieldName: "email", unique: true });
 
 module.exports = {
   usersStore,
@@ -55,4 +57,5 @@ module.exports = {
   favoritesStore,
   trafficStore,
   settingsStore,
+  registrationOtpsStore,
 };
