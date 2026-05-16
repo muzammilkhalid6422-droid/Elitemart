@@ -144,7 +144,13 @@ const Register = () => {
       setStep(role === "seller" ? "sellerOtp" : "userOtp");
       setNotice(response.data.message || "OTP has been sent to your email.", "success");
     } catch (error) {
-      setNotice(error.response?.data?.message || "Unable to send registration OTP.");
+      if (error.response?.data?.message) {
+        setNotice(error.response.data.message);
+      } else if (error.request) {
+        setNotice("Cannot connect to server. Please check VITE_API_URL and server CLIENT_URL/CORS settings.");
+      } else {
+        setNotice("Unable to send registration OTP.");
+      }
     } finally {
       setLoading(false);
     }
