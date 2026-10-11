@@ -142,7 +142,16 @@ const Register = () => {
 
       setRegistrationOtp("");
       setStep(role === "seller" ? "sellerOtp" : "userOtp");
-      setNotice(response.data.message || "OTP has been sent to your email.", "success");
+
+      if (response.data.devOtp) {
+        // Dev mode: email delivery failed, show OTP in message for manual entry
+        setNotice(
+          `Email delivery failed. Your OTP is: ${response.data.devOtp} - please type it below.`,
+          "success"
+        );
+      } else {
+        setNotice(response.data.message || "OTP has been sent to your email.", "success");
+      }
     } catch (error) {
       if (error.response?.data?.message) {
         setNotice(error.response.data.message);

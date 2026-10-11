@@ -414,6 +414,29 @@
   text-decoration: none;
 }
 
+.forgot-wrapper {
+  min-height: 600px;
+}
+
+.forgot-brand-panel .login-brand-content {
+  gap: 24px;
+}
+
+.forgot-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 22px;
+  color: rgba(248, 244, 234, 0.72);
+  font-size: 12px;
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.forgot-back-link svg {
+  color: #e7b94f;
+}
+
 .login-btn {
   display: flex;
   min-height: 54px;

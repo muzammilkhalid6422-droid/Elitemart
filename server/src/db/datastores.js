@@ -2,6 +2,48 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 const Datastore = require("nedb-promises");
+const nedbStorage = require("@seald-io/nedb/lib/storage.js");
+
+const isRetryableFsError = (error) =>
+  ["EPERM", "EACCES", "EEXIST", "EBUSY", "UNKNOWN", "EAGAIN"].includes(error?.code);
+
+const originalCrashSafeWrite = nedbStorage.crashSafeWriteFileLinesAsync;
+nedbStorage.crashSafeWriteFileLinesAsync = async (filename, lines, modes) => {
+  try {
+    await originalCrashSafeWrite(filename, lines, modes);
+  } catch (error) {
+    if (!isRetryableFsError(error)) throw error;
+
+    const tempFilename = `${filename}~`;
+    const destExists = fs.existsSync(filename);
+    const tempExists = fs.existsSync(tempFilename);
+
+    if (tempExists && destExists) {
+      for (let attempt = 1; attempt <= 4; attempt += 1) {
+        try {
+          await fs.promises.copyFile(tempFilename, filename);
+          break;
+        } catch (copyError) {
+          if (attempt === 4) {
+            // Keep the existing db file rather than crashing the whole server.
+            console.warn(
+              `[DB] Could not replace ${path.basename(filename)} from temp file:`,
+              copyError.message
+            );
+            break;
+          }
+          await new Promise((resolve) => setTimeout(resolve, 150 * attempt));
+        }
+      }
+    } else if (tempExists && !destExists) {
+      await fs.promises.copyFile(tempFilename, filename);
+    } else if (!tempExists) {
+      throw error;
+    }
+
+    await fs.promises.unlink(tempFilename).catch(() => {});
+  }
+};
 
 const dataDir = path.join(__dirname, "..", "data");
 const mongoUri = String(process.env.MONGODB_URI || "").trim();
@@ -151,9 +193,47 @@ const createStore = (filename) =>
     ? new MongoStore(path.basename(filename, ".db"))
     : Datastore.create({
         filename: path.join(dataDir, filename),
-        autoload: true,
+        autoload: false,
         timestampData: true,
       });
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const clearStaleTempFiles = () => {
+  if (!fs.existsSync(dataDir)) return;
+
+  for (const file of fs.readdirSync(dataDir)) {
+    if (!file.endsWith(".db~")) continue;
+    const tempPath = path.join(dataDir, file);
+    try {
+      fs.unlinkSync(tempPath);
+    } catch (error) {
+      console.warn(`[DB] Could not remove stale ${file}:`, error.message);
+      setTimeout(() => {
+        fs.unlink(tempPath, () => {});
+      }, 500);
+    }
+  }
+};
+
+const loadStoreWithRetry = async (name, store, retries = 6) => {
+  if (shouldUseMongo || typeof store.load !== "function") return;
+
+  for (let attempt = 1; attempt <= retries; attempt += 1) {
+    try {
+      await store.load();
+      return;
+    } catch (error) {
+      const retryable = isRetryableFsError(error);
+      if (retryable && attempt < retries) {
+        console.warn(`[DB] ${name} locked (${error.code}), retry ${attempt}/${retries - 1}...`);
+        await sleep(400 * attempt);
+        continue;
+      }
+      throw error;
+    }
+  }
+};
 
 const usersStore = createStore("users.db");
 const sellersStore = createStore("sellers.db");
@@ -167,25 +247,52 @@ const favoritesStore = createStore("favorites.db");
 const trafficStore = createStore("traffic.db");
 const settingsStore = createStore("settings.db");
 const registrationOtpsStore = createStore("registrationOtps.db");
+const passwordResetOtpsStore = createStore("passwordResetOtps.db");
 
-usersStore.ensureIndex({ fieldName: "email", unique: true });
-sellersStore.ensureIndex({ fieldName: "email", unique: true });
-adminsStore.ensureIndex({ fieldName: "email", unique: true });
-productsStore.ensureIndex({ fieldName: "sellerId" });
-cartsStore.ensureIndex({ fieldName: "userId", unique: true });
-ordersStore.ensureIndex({ fieldName: "userId" });
-paymentRequestsStore.ensureIndex({ fieldName: "sellerId" });
-paymentRequestsStore.ensureIndex({ fieldName: "status" });
-reviewsStore.ensureIndex({ fieldName: "productId" });
-reviewsStore.ensureIndex({ fieldName: "userId" });
-favoritesStore.ensureIndex({ fieldName: "userId" });
-trafficStore.ensureIndex({ fieldName: "visitorId" });
-trafficStore.ensureIndex({ fieldName: "path" });
-trafficStore.ensureIndex({ fieldName: "createdAt" });
-settingsStore.ensureIndex({ fieldName: "key", unique: true });
-registrationOtpsStore.ensureIndex({ fieldName: "email", unique: true });
+const nedbStores = [
+  ["users.db", usersStore],
+  ["sellers.db", sellersStore],
+  ["admins.db", adminsStore],
+  ["products.db", productsStore],
+  ["carts.db", cartsStore],
+  ["orders.db", ordersStore],
+  ["paymentRequests.db", paymentRequestsStore],
+  ["reviews.db", reviewsStore],
+  ["favorites.db", favoritesStore],
+  ["traffic.db", trafficStore],
+  ["settings.db", settingsStore],
+  ["registrationOtps.db", registrationOtpsStore],
+  ["passwordResetOtps.db", passwordResetOtpsStore],
+];
+
+const ready = (async () => {
+  if (shouldUseMongo) return;
+  clearStaleTempFiles();
+  for (const [name, store] of nedbStores) {
+    await loadStoreWithRetry(name, store);
+  }
+
+  usersStore.ensureIndex({ fieldName: "email", unique: true });
+  sellersStore.ensureIndex({ fieldName: "email", unique: true });
+  adminsStore.ensureIndex({ fieldName: "email", unique: true });
+  productsStore.ensureIndex({ fieldName: "sellerId" });
+  cartsStore.ensureIndex({ fieldName: "userId", unique: true });
+  ordersStore.ensureIndex({ fieldName: "userId" });
+  paymentRequestsStore.ensureIndex({ fieldName: "sellerId" });
+  paymentRequestsStore.ensureIndex({ fieldName: "status" });
+  reviewsStore.ensureIndex({ fieldName: "productId" });
+  reviewsStore.ensureIndex({ fieldName: "userId" });
+  favoritesStore.ensureIndex({ fieldName: "userId" });
+  trafficStore.ensureIndex({ fieldName: "visitorId" });
+  trafficStore.ensureIndex({ fieldName: "path" });
+  trafficStore.ensureIndex({ fieldName: "createdAt" });
+  settingsStore.ensureIndex({ fieldName: "key", unique: true });
+  registrationOtpsStore.ensureIndex({ fieldName: "email", unique: true });
+  passwordResetOtpsStore.ensureIndex({ fieldName: "email", unique: true });
+})();
 
 module.exports = {
+  ready,
   usersStore,
   sellersStore,
   adminsStore,
@@ -198,4 +305,5 @@ module.exports = {
   trafficStore,
   settingsStore,
   registrationOtpsStore,
+  passwordResetOtpsStore,
 };

@@ -3,6 +3,8 @@ const {
   productsStore,
   sellersStore,
   usersStore,
+  cartsStore,
+  favoritesStore,
 } = require("../db/datastores");
 const {
   applyAutoComplete,
@@ -432,6 +434,71 @@ const downgradeSeller = async (req, res) => {
   }
 };
 
+const deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({
+        message: "User ID is required",
+      });
+    }
+
+    const user = await usersStore.findOne({ $or: [{ _id: id }, { id: id }] });
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    const targetId = user._id;
+    await usersStore.remove({ _id: targetId }, {});
+    await cartsStore.remove({ userId: targetId }, { multi: true });
+    await favoritesStore.remove({ userId: targetId }, { multi: true });
+
+    return res.json({
+      message: `User ${user.email} deleted successfully`,
+    });
+  } catch (error) {
+    console.error("Delete user error:", error);
+    return res.status(500).json({
+      message: "Unable to delete user",
+    });
+  }
+};
+
+const deleteSeller = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({
+        message: "Seller ID is required",
+      });
+    }
+
+    const seller = await sellersStore.findOne({ $or: [{ _id: id }, { id: id }] });
+    if (!seller) {
+      return res.status(404).json({
+        message: "Seller not found",
+      });
+    }
+
+    const targetId = seller._id;
+    await sellersStore.remove({ _id: targetId }, {});
+    await productsStore.remove({ sellerId: targetId }, { multi: true });
+
+    return res.json({
+      message: `Seller ${seller.email} deleted successfully`,
+    });
+  } catch (error) {
+    console.error("Delete seller error:", error);
+    return res.status(500).json({
+      message: "Unable to delete seller",
+    });
+  }
+};
+
 module.exports = {
   getAdminOverview,
   getAllUsers,
@@ -443,6 +510,8 @@ module.exports = {
   getSeller,
   approveSeller,
   rejectSeller,
+  deleteUser,
+  deleteSeller,
   getPaidSellers,
   upgradeSeller,
   extendSellerPlan,

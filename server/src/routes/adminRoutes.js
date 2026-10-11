@@ -15,6 +15,8 @@ const {
   getSeller,
   approveSeller,
   rejectSeller,
+  deleteUser,
+  deleteSeller,
   getPaidSellers,
   upgradeSeller,
   extendSellerPlan,
@@ -42,6 +44,7 @@ router.get("/overview", protect, adminOnly, getAdminOverview);
 router.get("/settings", protect, adminOnly, getAdminSettings);
 router.put("/settings", protect, adminOnly, updateAdminSettings);
 router.get("/users", protect, adminOnly, getAllUsers);
+router.delete("/users/:id", protect, adminOnly, deleteUser);
 router.get("/products", protect, adminOnly, getAllProducts);
 router.get("/orders", protect, adminOnly, getAllOrders);
 router.get("/payment-requests", protect, adminOnly, getPaymentRequests);
@@ -59,5 +62,6 @@ router.put("/sellers/:id/upgrade", protect, adminOnly, upgradeSeller);
 router.put("/sellers/:id/extend-plan", protect, adminOnly, extendSellerPlan);
 router.put("/sellers/:id/downgrade", protect, adminOnly, downgradeSeller);
 router.delete("/sellers/:id/reject", protect, adminOnly, rejectSeller);
+router.delete("/sellers/:id", protect, adminOnly, deleteSeller);
 
 module.exports = router;

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Mail } from "lucide-react";
+import { Search, Mail, Trash2 } from "lucide-react";
 import api from "../../services/api";
 import "./AdminPages.css";
 
@@ -7,6 +7,8 @@ const AdminUsers = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [deletingId, setDeletingId] = useState(null);
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     fetchUsers();
@@ -20,6 +22,23 @@ const AdminUsers = () => {
       console.error("Error:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async (id, name, email) => {
+    const displayName = name || email || "this user";
+    if (window.confirm(`Are you sure you want to permanently delete "${displayName}"?`)) {
+      try {
+        setDeletingId(id);
+        const res = await api.delete(`/admin/users/${id}`);
+        setMessage(res.data?.message || "User deleted successfully");
+        setUsers((current) => current.filter((u) => (u._id || u.id) !== id));
+      } catch (error) {
+        console.error("Error deleting user:", error);
+        alert(error.response?.data?.message || "Failed to delete user");
+      } finally {
+        setDeletingId(null);
+      }
     }
   };
 
@@ -48,6 +67,8 @@ const AdminUsers = () => {
         />
       </div>
 
+      {message && <div className="admin-message" style={{ marginBottom: "16px" }}>{message}</div>}
+
       <div className="table-card">
         <table className="admin-table">
           <thead>
@@ -57,12 +78,13 @@ const AdminUsers = () => {
               <th>Phone</th>
               <th>Status</th>
               <th>Joined</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody>
             {filteredUsers.length === 0 ? (
               <tr>
-                <td colSpan="5" className="no-data">
+                <td colSpan="6" className="no-data">
                   No users found
                 </td>
               </tr>
@@ -84,6 +106,17 @@ const AdminUsers = () => {
                     <span className="status-badge active">Active</span>
                   </td>
                   <td>{new Date(user.createdAt).toLocaleDateString()}</td>
+                  <td>
+                    <button
+                      className="delete-user-btn"
+                      title="Delete user"
+                      disabled={deletingId === (user._id || user.id)}
+                      onClick={() => handleDeleteUser(user._id || user.id, user.name, user.email)}
+                    >
+                      <Trash2 size={14} />
+                      <span>{deletingId === (user._id || user.id) ? "Deleting..." : "Delete"}</span>
+                    </button>
+                  </td>
                 </tr>
               ))
             )}

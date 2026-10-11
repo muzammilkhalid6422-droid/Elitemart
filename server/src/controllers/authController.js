@@ -2,14 +2,24 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const https = require("https");
 
-const { usersStore, sellersStore, registrationOtpsStore } = require("../db/datastores");
+const {
+  usersStore,
+  sellersStore,
+  registrationOtpsStore,
+  passwordResetOtpsStore,
+} = require("../db/datastores");
 const { isPlanExpired, normalizeSellerPlan, formatPlanInfo, getPlanStatus } = require("../utils/planUtils");
-const { sendLoginEmail, sendRegistrationOtpEmail } = require("../utils/emailService");
+const {
+  sendLoginEmail,
+  sendRegistrationOtpEmail,
+  sendPasswordResetOtpEmail,
+} = require("../utils/emailService");
 
 const allowedRoles = new Set(["user", "seller", "admin"]);
 const MAX_AVATAR_SIZE_BYTES = 3 * 1024 * 1024;
 const MAX_DOCUMENT_SIZE_BYTES = 5 * 1024 * 1024;
 const REGISTRATION_OTP_MINUTES = 10;
+const PASSWORD_RESET_OTP_MINUTES = 10;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 const normalizeEmail = (email) =>
@@ -29,6 +39,31 @@ const findExistingAccountByEmail = async (email) => {
   const existingUser = await usersStore.findOne({ email: normalizedEmail });
   const existingSeller = await sellersStore.findOne({ email: normalizedEmail });
   return existingUser || existingSeller;
+};
+
+const findAccountRecordByEmail = async (email) => {
+  const normalizedEmail = normalizeEmail(email);
+  const user = await usersStore.findOne({ email: normalizedEmail });
+
+  if (user) {
+    return {
+      account: user,
+      store: usersStore,
+      role: "user",
+    };
+  }
+
+  const seller = await sellersStore.findOne({ email: normalizedEmail });
+
+  if (seller) {
+    return {
+      account: seller,
+      store: sellersStore,
+      role: "seller",
+    };
+  }
+
+  return null;
 };
 
 const verifyRegistrationOtpForEmail = async (email, otp) => {
@@ -102,9 +137,19 @@ const requestRegistrationOtp = async (req, res) => {
       otp
     );
 
+    console.log(`\n==========================================\n[REGISTRATION OTP] Email: ${normalizedEmail} | OTP: ${otp}\n==========================================\n`);
+
     if (!sent) {
+      const isDevMode = process.env.NODE_ENV !== "production" || process.env.ALLOW_DEV_OTP === "true";
+      if (isDevMode) {
+        console.log(`[DEV] Email not sent. Returning OTP in response for testing.`);
+        return res.json({
+          message: "OTP generated (email delivery failed - dev mode)",
+          devOtp: otp,
+        });
+      }
       return res.status(500).json({
-        message: "Email service is not configured. Please check SMTP settings.",
+        message: "Email could not be delivered. Please try again later.",
       });
     }
 
@@ -115,6 +160,147 @@ const requestRegistrationOtp = async (req, res) => {
     console.error("Registration OTP error:", error);
     return res.status(502).json({
       message: "Could not send OTP email. Please check SMTP settings and try again.",
+    });
+  }
+};
+
+const requestPasswordResetOtp = async (req, res) => {
+  try {
+    const normalizedEmail = normalizeEmail(req.body.email);
+
+    if (!isValidEmail(normalizedEmail)) {
+      return res.status(400).json({
+        message: "Email is not valid",
+      });
+    }
+
+    const accountRecord = await findAccountRecordByEmail(normalizedEmail);
+
+    if (!accountRecord) {
+      return res.status(404).json({
+        message: "No account found with this email",
+      });
+    }
+
+    const otp = generateOtp();
+    const otpHash = await bcrypt.hash(otp, 10);
+    const expiresAt = new Date(
+      Date.now() + PASSWORD_RESET_OTP_MINUTES * 60 * 1000
+    ).toISOString();
+
+    await passwordResetOtpsStore.update(
+      { email: normalizedEmail },
+      {
+        $set: {
+          email: normalizedEmail,
+          role: accountRecord.role,
+          otpHash,
+          expiresAt,
+        },
+      },
+      { upsert: true }
+    );
+
+    const sent = await sendPasswordResetOtpEmail(accountRecord.account, otp);
+
+    console.log(`\n==========================================\n[RESET OTP] Email: ${normalizedEmail} | OTP: ${otp}\n==========================================\n`);
+
+    if (!sent) {
+      const isDevMode = process.env.NODE_ENV !== "production" || process.env.ALLOW_DEV_OTP === "true";
+      if (isDevMode) {
+        console.log(`[DEV] Email not sent. Returning OTP in response for testing.`);
+        return res.json({
+          message: "OTP generated (email delivery failed - dev mode)",
+          devOtp: otp,
+        });
+      }
+      return res.status(500).json({
+        message: "Email could not be delivered. Please try again later.",
+      });
+    }
+
+    return res.json({
+      message: "Password reset OTP has been sent to your email",
+    });
+  } catch (error) {
+    console.error("Password reset OTP error:", error);
+    return res.status(502).json({
+      message: "Could not send reset OTP email. Please check SMTP settings and try again.",
+    });
+  }
+};
+
+const resetPassword = async (req, res) => {
+  try {
+    const normalizedEmail = normalizeEmail(req.body.email);
+    const otp = String(req.body.otp || "").trim();
+    const password = String(req.body.password || "").trim();
+
+    if (!isValidEmail(normalizedEmail)) {
+      return res.status(400).json({
+        message: "Email is not valid",
+      });
+    }
+
+    if (!otp || !password) {
+      return res.status(400).json({
+        message: "Email, OTP, and new password are required",
+      });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({
+        message: "Password must be at least 6 characters",
+      });
+    }
+
+    const resetOtp = await passwordResetOtpsStore.findOne({ email: normalizedEmail });
+
+    if (
+      !resetOtp ||
+      !resetOtp.otpHash ||
+      !resetOtp.expiresAt ||
+      new Date(resetOtp.expiresAt).getTime() < Date.now()
+    ) {
+      return res.status(400).json({
+        message: "OTP is invalid or expired",
+      });
+    }
+
+    const isOtpValid = await bcrypt.compare(otp, resetOtp.otpHash);
+
+    if (!isOtpValid) {
+      return res.status(400).json({
+        message: "OTP is invalid or expired",
+      });
+    }
+
+    const accountRecord = await findAccountRecordByEmail(normalizedEmail);
+
+    if (!accountRecord) {
+      return res.status(404).json({
+        message: "No account found with this email",
+      });
+    }
+
+    await accountRecord.store.update(
+      { _id: accountRecord.account._id },
+      {
+        $set: {
+          password: await bcrypt.hash(password, 10),
+        },
+      },
+      {}
+    );
+    await passwordResetOtpsStore.remove({ email: normalizedEmail }, {});
+
+    return res.json({
+      message: "Password has been reset successfully",
+    });
+  } catch (error) {
+    console.error("Reset password error:", error);
+    return res.status(500).json({
+      message: "Unable to reset password",
     });
   }
 };
@@ -425,7 +611,13 @@ const loginUser = async (req, res) => {
       });
     }
 
-    const normalizedEmail = String(email).trim().toLowerCase();
+    const normalizedEmail = normalizeEmail(email);
+
+    if (!isValidEmail(normalizedEmail)) {
+      return res.status(400).json({
+        message: "Email is not valid",
+      });
+    }
 
     // Check in users store
     let user = await usersStore.findOne({ email: normalizedEmail });
@@ -737,6 +929,8 @@ module.exports = {
   registerUser,
   registerSeller,
   requestRegistrationOtp,
+  requestPasswordResetOtp,
+  resetPassword,
   loginUser,
   loginWithGoogle,
   getProfile,

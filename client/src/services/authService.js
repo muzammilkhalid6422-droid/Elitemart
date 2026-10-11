@@ -14,6 +14,14 @@ export const requestRegistrationOtp = (data) => {
   return api.post("/auth/register/request-otp", data);
 };
 
+export const requestPasswordResetOtp = (data) => {
+  return api.post("/auth/password/forgot", data);
+};
+
+export const resetPassword = (data) => {
+  return api.post("/auth/password/reset", data);
+};
+
 // LOGIN USER/SELLER
 export const loginUser = (data) => {
   return api.post("/auth/login", data);

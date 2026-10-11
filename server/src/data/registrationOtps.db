@@ -1,3 +1,6 @@
 {"email":"muzammilkhalid1625@gmail.com","role":"user","otpHash":"$2a$10$UaEGLSp8OQFpNVMgvPv.IeEaeDe2w/.Xl/gsdrss/Was9D7pKRZQa","expiresAt":"2026-05-10T05:50:27.444Z","_id":"LrKYrje6zuGrfPqB","createdAt":{"$$date":1778391627444},"updatedAt":{"$$date":1778391627444}}
+{"email":"muzammilkhalid4526@gmail.com","role":"seller","otpHash":"$2a$10$/ad/St.ieBMg4ZZNDEYehuGdzr796QA4vQP8foJjHZnPXbHDwkkq2","expiresAt":"2026-10-07T18:22:34.803Z","_id":"kGxdF15m5bvvIBXf","createdAt":{"$$date":1791396754804},"updatedAt":{"$$date":1791396754804}}
+{"email":"aliyanaslam600@gmail.com","role":"user","otpHash":"$2a$10$2ze2FbRkRqm/eqRH4bYx3ebTIFFA3P4gs6JVpyGeGhvOevtblo/OK","expiresAt":"2026-10-08T18:21:02.680Z","_id":"ulgFx1p1y15hwpUS","createdAt":{"$$date":1791477245295},"updatedAt":{"$$date":1791483062680}}
+{"email":"aslam600@gmail.com","role":"user","otpHash":"$2a$10$VPiISzVl2y27rcOlY44xt.FBfu5ssZsYmXXG.5ZU.DSyBWUo8a9ZK","expiresAt":"2026-10-08T18:16:33.620Z","_id":"vRbR577mFaTjJ6EY","createdAt":{"$$date":1791482421469},"updatedAt":{"$$date":1791482793637}}
+{"email":"khadija22@gmail.com","role":"user","otpHash":"$2a$10$c3MV.NnfWjgS4QKBpISBwuu/ATtCQfwknbFEg6bu2KOjUTzRG/zTW","expiresAt":"2026-10-11T12:50:10.325Z","_id":"w2WxXO2yiFpzwNVp","createdAt":{"$$date":1791721134069},"updatedAt":{"$$date":1791722410326}}
 {"$$indexCreated":{"fieldName":"email","unique":true,"sparse":false}}
-{"$$indexCreated":{"fieldName":"email","unique":true}}

@@ -20,6 +20,14 @@ import { clearAuthSession, getActiveAuthUser, saveAuthSession } from "../../util
 import { splitBrandName, useBranding } from "../../context/BrandingContext";
 import "./Login.css";
 
+const normalizeEmail = (email) =>
+  String(email || "")
+    .normalize("NFKC")
+    .replace(/[\u200B-\u200D\uFEFF]/g, "")
+    .replace(/\s+/g, "")
+    .trim()
+    .toLowerCase();
+
 const Login = () => {
   const navigate = useNavigate();
   const { branding } = useBranding();
@@ -52,7 +60,10 @@ const Login = () => {
 
   const handleChange = (event) => {
     const { name, value } = event.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name === "email" ? normalizeEmail(value) : value,
+    }));
   };
 
   const finishLogin = (user, token) => {
@@ -79,7 +90,10 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const response = await loginUser(formData);
+      const response = await loginUser({
+        ...formData,
+        email: normalizeEmail(formData.email),
+      });
 
       setMessageType("success");
       setMessage("Login successful.");
@@ -122,7 +136,7 @@ const Login = () => {
 
     if (!clientId) {
       setMessageType("error");
-      setMessage("Google login ke liye VITE_GOOGLE_CLIENT_ID set karein.");
+      setMessage("Google login is not configured. Please set VITE_GOOGLE_CLIENT_ID in client/.env");
       return;
     }
 
@@ -264,7 +278,7 @@ const Login = () => {
                 </button>
               </label>
 
-              <Link to="/register" className="forgot-link">Forgot Password?</Link>
+              <Link to="/forgot-password" className="forgot-link">Forgot Password?</Link>
 
               <button type="submit" className="login-btn" disabled={loading}>
                 <span>{loading ? "Signing in..." : "Login"}</span>

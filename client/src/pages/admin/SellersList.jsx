@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Eye, Check, X, Search } from "lucide-react";
+import { Eye, Check, X, Search, Trash2 } from "lucide-react";
 import api from "../../services/api";
 import "./SellersList.css";
 
@@ -59,6 +59,21 @@ const SellersList = () => {
     }
   };
 
+  const handleDeleteSeller = async (id, name, email) => {
+    const displayName = name || email || "this seller";
+    if (window.confirm(`Are you sure you want to permanently delete seller "${displayName}"? All their associated products and records will also be removed.`)) {
+      try {
+        await api.delete(`/admin/sellers/${id}`);
+        setMessage("Seller deleted successfully!");
+        setSellers((current) => current.filter((s) => (s._id || s.id) !== id));
+        setSelectedSeller((current) => ((current?._id || current?.id) === id ? null : current));
+      } catch (error) {
+        console.error("Error:", error);
+        setMessage(error.response?.data?.message || "Unable to delete seller");
+      }
+    }
+  };
+
   const filteredSellers = sellers.filter((seller) =>
     seller.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     seller.email?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -113,6 +128,17 @@ const SellersList = () => {
                       {seller.isApproved ? "Approved" : "Pending"}
                     </span>
                   </div>
+                  <button
+                    type="button"
+                    className="card-delete-seller-btn"
+                    title="Delete Seller"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteSeller(seller._id, seller.name, seller.email);
+                    }}
+                  >
+                    <Trash2 size={15} />
+                  </button>
                 </div>
               ))}
             </div>
@@ -213,8 +239,9 @@ const SellersList = () => {
             </div>
 
             {/* ACTION BUTTONS */}
-            {!selectedSeller.isApproved && (
-              <div className="action-buttons">
+            <div className="action-buttons">
+              {!selectedSeller.isApproved && (<>
+              {/* buttons */}
                 <button
                   className="approve-btn"
                   onClick={() => handleApproveSeller(selectedSeller._id)}
@@ -229,8 +256,17 @@ const SellersList = () => {
                   <X size={18} />
                   Reject Seller
                 </button>
-              </div>
-            )}
+              </>
+              )}
+              <button
+                className="delete-seller-btn"
+                onClick={() => handleDeleteSeller(selectedSeller._id, selectedSeller.name, selectedSeller.email)}
+              >
+                <Trash2 size={18} />
+                Delete Seller
+              </button>
+            </div>
+            {/* actions end */}
           </div>
         )}
       </div>

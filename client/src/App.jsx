@@ -8,6 +8,7 @@ import AdminLayout from "./components/layout/AdminLayout";
 // Auth Pages
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
+import ForgotPassword from "./pages/auth/ForgotPassword";
 import AdminLogin from "./pages/auth/AdminLogin";
 
 // User Pages
@@ -55,7 +56,7 @@ const getStoredAuthUser = () => {
 };
 
 const AuthRedirect = () => {
-  const adminToken = localStorage.getItem("adminToken");
+const adminToken = localStorage.getItem("adminToken");
   if (adminToken) return <Navigate to="/admin/dashboard" replace />;
 
   const user = getStoredAuthUser();
@@ -68,7 +69,7 @@ const AuthRedirect = () => {
 function App() {
   const storedSeller = getStoredSeller();
   const location = useLocation();
-  const authPages = new Set(["/login", "/register", "/admin/login"]);
+  const authPages = new Set(["/login", "/register", "/forgot-password", "/admin/login"]);
   const showFooter = !location.pathname.startsWith("/admin") && !authPages.has(location.pathname);
 
   return (
@@ -86,6 +87,7 @@ function App() {
           {/* AUTH */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/admin/login" element={<AdminLogin />} />
 
           {/* USER ROUTES */}
